@@ -1,43 +1,56 @@
-from app.chunking import chunk_text
-from app.config import (
-    DEFAULT_CHUNK_SIZE,
-    DEFAULT_OVERLAP,
-    DEFAULT_TOP_K,
+from app.core.config import (
+    CHUNK_OVERLAP,
+    CHUNK_SIZE,
+    DEFAULT_PDF_PATH,
     EMBEDDING_MODEL_NAME,
-    PDF_PATH,
+    TOP_K,
 )
-from app.embeddings import load_embedding_model
-from app.ingest import clean_text, extract_text_from_pdf
-from app.retrieval import retrieve_top_k
+from app.core.logging import get_logger
+from app.indexing.chunking import chunk_text
+from app.indexing.embeddings import TextEmbedder
+from app.ingestion.ingest import load_pdf
+from app.ingestion.text_cleaner import clean_text
+from app.retrieval.retrieval import retrieve_top_k
+
+logger = get_logger(__name__)
 
 
 def main() -> None:
-    if not PDF_PATH.exists():
-        print(f"File not found: {PDF_PATH}")
-        return
+    query = "What is a mammal?"
 
-    raw_text = extract_text_from_pdf(PDF_PATH)
-    cleaned_text = clean_text(raw_text)
+    logger.info("Loading PDF...")
+    document = load_pdf(DEFAULT_PDF_PATH)
+
+    logger.info("Cleaning text...")
+    document.content = clean_text(document.content)
+
+    logger.info("Chunking document...")
     chunks = chunk_text(
-        cleaned_text,
-        chunk_size=DEFAULT_CHUNK_SIZE,
-        overlap=DEFAULT_OVERLAP,
+        document=document,
+        chunk_size=CHUNK_SIZE,
+        overlap=CHUNK_OVERLAP,
     )
 
-    model = load_embedding_model(EMBEDDING_MODEL_NAME)
+    logger.info("Encoding chunks...")
+    embedder = TextEmbedder(EMBEDDING_MODEL_NAME)
+    chunk_embeddings = embedder.encode_chunks(chunks)
 
-    query = "What is a mammal?"
-    results = retrieve_top_k(query=query, chunks=chunks, model=model, k=DEFAULT_TOP_K)
+    logger.info("Encoding query...")
+    query_vector = embedder.encode_query(query)
+
+    logger.info("Retrieving top-k chunks...")
+    results = retrieve_top_k(
+        query_vector=query_vector,
+        chunk_embeddings=chunk_embeddings,
+        chunks=chunks,
+        top_k=TOP_K,
+    )
 
     print(f"\nQuery: {query}\n")
-    print(f"--- TOP {DEFAULT_TOP_K} RETRIEVED CHUNKS ---\n")
-
     for rank, result in enumerate(results, start=1):
-        print(f"Rank {rank}")
-        print(f"Chunk index: {result['chunk_index']}")
-        print(f"Similarity score: {result['score']:.4f}")
-        print(result["text"][:700])
-        print("\n" + "-" * 80 + "\n")
+        print(f"[{rank}] score={result.score:.4f}")
+        print(result.chunk.text[:400])
+        print("-" * 80)
 
 
 if __name__ == "__main__":
