@@ -18,3 +18,7 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 200))
 TOP_K = int(os.getenv("TOP_K", 3))
 
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+
+QUERY_TEXT = os.getenv("QUERY_TEXT", "What is a mammal?")
+
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./data/chroma")

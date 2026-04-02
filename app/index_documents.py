@@ -4,7 +4,6 @@ from app.core.config import (
     CHUNK_SIZE,
     DEFAULT_PDF_PATH,
     EMBEDDING_MODEL_NAME,
-    QUERY_TEXT,
 )
 from app.core.logging import get_logger
 from app.indexing.chunking import chunk_text
@@ -38,26 +37,12 @@ def main() -> None:
     vector_store = ChromaVectorStore(persist_directory=CHROMA_PERSIST_DIR)
 
     logger.info("Adding chunks to ChromaDB...")
-    vector_store.add_chunks(chunks=chunks, embeddings=chunk_embeddings.tolist())
+    vector_store.add_chunks(
+        chunks=chunks,
+        embeddings=chunk_embeddings.tolist(),
+    )
 
-    logger.info("Encoding query...")
-    query_vector = embedder.encode_query(QUERY_TEXT)
-
-    logger.info("Querying ChromaDB...")
-    results = vector_store.query(query_embedding=query_vector.tolist())
-
-    print(f"\nQuery: {QUERY_TEXT}\n")
-
-    documents = results["documents"][0]
-    distances = results["distances"][0]
-
-    for rank, (document_text, distance) in enumerate(
-        zip(documents, distances),
-        start=1,
-    ):
-        print(f"[{rank}] distance={distance:.4f}")
-        print(document_text[:400])
-        print("-" * 80)
+    logger.info("Indexing completed successfully.")
 
 
 if __name__ == "__main__":
