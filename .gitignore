@@ -1,6 +1,25 @@
+# virtual env
 .venv/
+
+# python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# env files
 .env
-data/chroma/
+.env.*
+
+# logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
 .idea/
+
+# project-specific
+data/chroma/
