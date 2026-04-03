@@ -12,14 +12,23 @@ def chunk_text(document: Document, chunk_size: int, overlap: int) -> list[Chunk]
         end = min(start + chunk_size, len(text))
         chunk_text_value = text[start:end]
 
+        chunk_metadata = {
+            **document.metadata,
+            "source_type": document.source_type,
+            "document_id": document.source_id,
+            "chunk_index": chunk_index,
+            "start_char": start,
+            "end_char": end,
+        }
+
         chunks.append(
             Chunk(
-                chunk_id=f"{document.source_id}_chunk_{chunk_index}",
+                chunk_id=f"{document.source_id}::chunk::{chunk_index}",
                 document_id=document.source_id,
                 text=chunk_text_value,
                 start_char=start,
                 end_char=end,
-                metadata=document.metadata.copy(),
+                metadata=chunk_metadata,
             )
         )
 
