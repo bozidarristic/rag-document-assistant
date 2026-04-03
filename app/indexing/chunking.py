@@ -14,7 +14,6 @@ def chunk_text(document: Document, chunk_size: int, overlap: int) -> list[Chunk]
 
         chunk_metadata = {
             **document.metadata,
-            "source_type": document.source_type,
             "document_id": document.source_id,
             "chunk_index": chunk_index,
             "start_char": start,
